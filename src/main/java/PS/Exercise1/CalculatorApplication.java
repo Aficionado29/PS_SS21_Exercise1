@@ -1,5 +1,6 @@
 package PS.Exercise1;
 
+import PS.Exercise1.Exceptions.InvalidTopOfStack;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -13,7 +14,7 @@ public class CalculatorApplication {
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
-	public void runCalculatorProcessing() {
+	public void runCalculatorProcessing() throws InvalidTopOfStack  {
 		CalculatorProcessor calculator = new CalculatorProcessor();
 		calculator.run();
 	}
