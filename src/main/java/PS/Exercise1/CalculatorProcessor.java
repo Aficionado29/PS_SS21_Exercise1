@@ -8,11 +8,13 @@ public class CalculatorProcessor {
 
     protected static int operationMode = 0;
     protected static Stack<String> dataStack = new Stack<String>();
-    protected String commandStream = "";
-    protected String[] dataRegister = new String[26];
+    protected static String commandStream = "";
+    protected static String[] dataRegister = new String[26];
+    protected static final float epsilon = 0.0001f;
 
     public CalculatorProcessor() {
-        dataRegister[0] = "9.1 4 _";
+        dataStack.push("3.0");
+        dataRegister[0] = "(3!3!1-2!1=4!()(4!4$1+$@)@2$*)3!3$3!@2$";
         commandStream = dataRegister[0];
     }
 
@@ -45,6 +47,22 @@ public class CalculatorProcessor {
                 dataStack.push(Float.toString(decimalNumber));
                 operationMode = -1;
                 break;
+            case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i':
+            case 'j': case 'k': case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
+            case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+                dataStack.push(dataRegister[this.getRegisterNo(inputCharacter)]);
+                break;
+            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I':
+            case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
+            case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+                dataRegister[this.getRegisterNo(inputCharacter)] = dataStack.pop();
+                break;
+            case '=': case '<': case '>':
+                this.comparison(inputCharacter);
+                break;
+            case '?':
+                this.check();
+                break;
             case '.':
                 dataStack.push("0.0");
                 operationMode = -2;
@@ -54,23 +72,35 @@ public class CalculatorProcessor {
                 operationMode = 1;
                 break;
             case '+': case '-': case '*': case '/':
-                this.compute(inputCharacter);
+                this.arithmetic(inputCharacter);
+                break;
+            case '&': case '|':
+                this.logic(inputCharacter);
                 break;
             case '~':
                 this.negation();
                 break;
+            case '%':
+                this.rounding();
+                break;
             case '_':
                 this.squareRoot();
                 break;
-            case '#':
-                float numOfItems = (float) dataStack.size();
-                dataStack.push(Float.toString(numOfItems));
+            case '!':
+                this.copy();
+                break;
+            case '$':
+                this.delete();
                 break;
             case '@':
                 this.applyImmediately();
                 break;
             case '\\':
                 this.applyLater();
+                break;
+            case '#':
+                float numOfItems = (float) dataStack.size();
+                dataStack.push(Float.toString(numOfItems));
                 break;
             default:
                 return;
@@ -91,7 +121,7 @@ public class CalculatorProcessor {
             case '9':
                 String stackItem = dataStack.pop();
                 if(!this.isWholeNumber(stackItem)) {
-                    throw new InvalidTopOfStack("");
+                    throw new InvalidTopOfStack("Expected Whole number");
                 }
                 float stackNumber = Float.parseFloat(stackItem) * 10;
                 int number = Character.getNumericValue(inputCharacter);
@@ -121,7 +151,7 @@ public class CalculatorProcessor {
             case '9':
                 String stackItem = dataStack.pop();
                 if(!this.isDecimalNumber(stackItem)) {
-                    throw new InvalidTopOfStack("");
+                    throw new InvalidTopOfStack("Expected Decimal number");
                 }
                 float stackNumber = Float.parseFloat(stackItem);
                 int number = Character.getNumericValue(inputCharacter);
@@ -142,7 +172,7 @@ public class CalculatorProcessor {
     private void constructList(char inputCharacter) throws InvalidTopOfStack {
         String stackItem = dataStack.pop();
         if(!this.isList(stackItem)) {
-            throw new InvalidTopOfStack("");
+            throw new InvalidTopOfStack("Expected List");
         }
         switch(inputCharacter) {
             case '(':
@@ -161,27 +191,103 @@ public class CalculatorProcessor {
         }
     }
 
-    private void applyImmediately() {
-        String stackItem = dataStack.pop();
-        if(this.isList(stackItem)) {
-            String newCommands = stackItem.substring(1, stackItem.length()-1);
-            commandStream = newCommands + commandStream;
-        } else {
-            dataStack.push(stackItem);
+    private void comparison(char inputCharacter) {
+        String stackItemB = dataStack.pop();
+        String stackItemA = dataStack.pop();
+        switch(inputCharacter) {
+            case '=':
+                if(this.isList(stackItemA) && this.isList(stackItemB)) {
+                    int comparisonRes = stackItemA.compareTo(stackItemB);
+                    if(comparisonRes == 0) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                } else if(this.isList(stackItemA) || this.isList(stackItemB)) {
+                    dataStack.push("0.0");
+                } else {
+                    float biggerNum;
+                    float numA = Float.parseFloat(stackItemA);
+                    float numB = Float.parseFloat(stackItemB);
+                    if(numA > numB) {
+                        biggerNum = numA;
+                        if((numA - numB) > (biggerNum * epsilon)) {
+                            dataStack.push("0.0");
+                        } else {
+                            dataStack.push("1.0");
+                        }
+                    } else {
+                        biggerNum = numB;
+                        if((Float.parseFloat(stackItemB) - numA) > (biggerNum * epsilon)) {
+                            dataStack.push("0.0");
+                        } else {
+                            dataStack.push("1.0");
+                        }
+                    }
+                }
+                break;
+            case '<':
+                if(this.isList(stackItemA) && this.isList(stackItemB)) {
+                    int comparisonRes = stackItemA.compareTo(stackItemB);
+                    if(comparisonRes < 0) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                } else if(this.isList(stackItemA)) {
+                    dataStack.push("0.0");
+                } else if(this.isList(stackItemB)) {
+                    dataStack.push("1.0");
+                } else {
+                    if(Float.parseFloat(stackItemA) < Float.parseFloat(stackItemB)) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                }
+                break;
+            case '>':
+                if(this.isList(stackItemA) && this.isList(stackItemB)) {
+                    int comparisonRes = stackItemA.compareTo(stackItemB);
+                    if(comparisonRes > 0) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                } else if(this.isList(stackItemA)) {
+                    dataStack.push("1.0");
+                } else if(this.isList(stackItemB)) {
+                    dataStack.push("0.0");
+                } else {
+                    if(Float.parseFloat(stackItemA) > Float.parseFloat(stackItemB)) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                }
+                break;
+            default:
+                return;
         }
     }
 
-    private void applyLater() {
+    private void check() {
         String stackItem = dataStack.pop();
-        if(this.isList(stackItem)) {
-            String newCommands = stackItem.substring(1, stackItem.length()-1);
-            commandStream = commandStream + newCommands;
+        if(stackItem.equals("()")) {
+            dataStack.push("1.0");
+        } else if(this.isDecimalNumber(stackItem)) {
+            float num = Float.parseFloat(stackItem);
+            if(num <= epsilon && num >= epsilon*-1) {
+                dataStack.push("1.0");
+            } else {
+                dataStack.push("0.0");
+            }
         } else {
-            dataStack.push(stackItem);
+            dataStack.push("0.0");
         }
     }
 
-    private void compute(char inputCharacter) {
+    private void arithmetic(char inputCharacter) {
         String stackItemB = dataStack.pop();
         String stackItemA = dataStack.pop();
         if(this.isList(stackItemB) || this.isList(stackItemA)) {
@@ -212,11 +318,63 @@ public class CalculatorProcessor {
         }
     }
 
+    private void logic(char inputCharacter) {
+        String stackItemB = dataStack.pop();
+        String stackItemA = dataStack.pop();
+        if(this.isList(stackItemB) || this.isList(stackItemA)) {
+            dataStack.push("()");
+        } else {
+            float numB = Float.parseFloat(stackItemB);
+            float numA = Float.parseFloat(stackItemA);
+            boolean numBA, numBB;
+            if(numA <= epsilon && numA >= epsilon*-1) {
+                numBA = true;
+            } else {
+                numBA = false;
+            }
+            if(numB <= epsilon && numB >= epsilon*-1) {
+                numBB = true;
+            } else {
+                numBB = false;
+            }
+            switch(inputCharacter) {
+                case '&':
+                    if(numBA && numBB) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                    break;
+                case '|':
+                    if(numBA || numBB) {
+                        dataStack.push("1.0");
+                    } else {
+                        dataStack.push("0.0");
+                    }
+                    break;
+                default:
+                    return;
+            }
+        }
+    }
+
     private void negation() {
         String stackItem = dataStack.pop();
         if(this.isDecimalNumber(stackItem)) {
             float negatedNum = Float.parseFloat(stackItem) * -1;
             dataStack.push(Float.toString(negatedNum));
+        } else {
+            dataStack.push("()");
+        }
+    }
+
+    private void rounding() {
+        String stackItem = dataStack.pop();
+        if(this.isDecimalNumber(stackItem)) {
+            float stackNum = Float.parseFloat(stackItem);
+            float roundedNum = Math.round(stackNum);
+            dataStack.push(stackItem);
+            dataStack.push(Float.toString(roundedNum - stackNum));
         } else {
             dataStack.push("()");
         }
@@ -231,6 +389,53 @@ public class CalculatorProcessor {
             } else {
                 dataStack.push(stackItem);
             }
+        } else {
+            dataStack.push(stackItem);
+        }
+    }
+
+    private void copy() {
+        String stackItem = dataStack.pop();
+        if(this.isDecimalNumber(stackItem)) {
+            int roundedNum = Math.round(Float.parseFloat(stackItem));
+            int stackSize = dataStack.size() + 1;
+            if(roundedNum <= stackSize) {
+                String copiedItem = dataStack.get(stackSize - roundedNum);
+                dataStack.push(copiedItem);
+            } else {
+                dataStack.push(stackItem);
+            }
+        } else {
+            dataStack.push(stackItem);
+        }
+    }
+
+    private void delete() {
+        String stackItem = dataStack.pop();
+        if(this.isDecimalNumber(stackItem)) {
+            int roundedNum = Math.round(Float.parseFloat(stackItem));
+            int stackSize = dataStack.size();
+            if(roundedNum <= stackSize) {
+                dataStack.remove(stackSize - roundedNum);
+            }
+        }
+    }
+
+    private void applyImmediately() {
+        String stackItem = dataStack.pop();
+        if(this.isList(stackItem)) {
+            String newCommands = stackItem.substring(1, stackItem.length()-1);
+            commandStream = newCommands + commandStream;
+        } else {
+            dataStack.push(stackItem);
+        }
+    }
+
+    private void applyLater() {
+        String stackItem = dataStack.pop();
+        if(this.isList(stackItem)) {
+            String newCommands = stackItem.substring(1, stackItem.length()-1);
+            commandStream = commandStream + newCommands;
         } else {
             dataStack.push(stackItem);
         }
