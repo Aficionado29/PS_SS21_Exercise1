@@ -12,19 +12,16 @@ public class CalculatorProcessor {
     protected String[] dataRegister = new String[26];
 
     public CalculatorProcessor() {
-        dataRegister[0] = "102.1((10).3).54321";
+        dataRegister[0] = "9.1 4 _";
         commandStream = dataRegister[0];
     }
 
     public void run() throws InvalidTopOfStack {
-        /*String s = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        for(int i = 0; i < s.length(); i++) {
-            System.out.println(this.getRegisterNo(s.charAt(i)));
-        }*/
         char inputCharacter;
         while(commandStream.length() != 0) {
             inputCharacter = commandStream.charAt(0);
             commandStream = commandStream.substring(1);
+            System.out.println("InputCharacter: " + inputCharacter + ", Stack: " + dataStack);
             if(operationMode == 0) {
                 this.executeInputChar(inputCharacter);
             } else if(operationMode == -1) {
@@ -35,7 +32,7 @@ public class CalculatorProcessor {
                 this.constructList(inputCharacter);
             }
         }
-        System.out.println(dataStack.pop());
+        System.out.println("Stack: " + dataStack);
     }
 
     private void executeInputChar(char inputCharacter) {
@@ -56,7 +53,27 @@ public class CalculatorProcessor {
                 dataStack.push("(");
                 operationMode = 1;
                 break;
-            default: return;
+            case '+': case '-': case '*': case '/':
+                this.compute(inputCharacter);
+                break;
+            case '~':
+                this.negation();
+                break;
+            case '_':
+                this.squareRoot();
+                break;
+            case '#':
+                float numOfItems = (float) dataStack.size();
+                dataStack.push(Float.toString(numOfItems));
+                break;
+            case '@':
+                this.applyImmediately();
+                break;
+            case '\\':
+                this.applyLater();
+                break;
+            default:
+                return;
         }
     }
 
@@ -91,10 +108,6 @@ public class CalculatorProcessor {
     }
 
     private void constructDecimalNum(char inputCharacter) throws InvalidTopOfStack {
-        String stackItem = dataStack.pop();
-        if(!this.isDecimalNumber(stackItem)) {
-            throw new InvalidTopOfStack("");
-        }
         switch(inputCharacter) {
             case '0':
             case '1':
@@ -106,6 +119,10 @@ public class CalculatorProcessor {
             case '7':
             case '8':
             case '9':
+                String stackItem = dataStack.pop();
+                if(!this.isDecimalNumber(stackItem)) {
+                    throw new InvalidTopOfStack("");
+                }
                 float stackNumber = Float.parseFloat(stackItem);
                 int number = Character.getNumericValue(inputCharacter);
                 float decimalNumber = (float) number * (float) Math.pow(10, operationMode+1);
@@ -141,6 +158,81 @@ public class CalculatorProcessor {
             default:
                 stackItem = stackItem + inputCharacter;
                 dataStack.push(stackItem);
+        }
+    }
+
+    private void applyImmediately() {
+        String stackItem = dataStack.pop();
+        if(this.isList(stackItem)) {
+            String newCommands = stackItem.substring(1, stackItem.length()-1);
+            commandStream = newCommands + commandStream;
+        } else {
+            dataStack.push(stackItem);
+        }
+    }
+
+    private void applyLater() {
+        String stackItem = dataStack.pop();
+        if(this.isList(stackItem)) {
+            String newCommands = stackItem.substring(1, stackItem.length()-1);
+            commandStream = commandStream + newCommands;
+        } else {
+            dataStack.push(stackItem);
+        }
+    }
+
+    private void compute(char inputCharacter) {
+        String stackItemB = dataStack.pop();
+        String stackItemA = dataStack.pop();
+        if(this.isList(stackItemB) || this.isList(stackItemA)) {
+            dataStack.push("()");
+        } else {
+            float numB = Float.parseFloat(stackItemB);
+            float numA = Float.parseFloat(stackItemA);
+            if(inputCharacter == '/' && numB == 0.0) {
+                dataStack.push("()");
+            } else {
+                switch(inputCharacter) {
+                    case '+':
+                        dataStack.push(Float.toString(numA + numB));
+                        break;
+                    case '-':
+                        dataStack.push(Float.toString(numA - numB));
+                        break;
+                    case '*':
+                        dataStack.push(Float.toString(numA * numB));
+                        break;
+                    case '/':
+                        dataStack.push(Float.toString(numA / numB));
+                        break;
+                    default:
+                        return;
+                }
+            }
+        }
+    }
+
+    private void negation() {
+        String stackItem = dataStack.pop();
+        if(this.isDecimalNumber(stackItem)) {
+            float negatedNum = Float.parseFloat(stackItem) * -1;
+            dataStack.push(Float.toString(negatedNum));
+        } else {
+            dataStack.push("()");
+        }
+    }
+
+    private void squareRoot() {
+        String stackItem = dataStack.pop();
+        if(this.isDecimalNumber(stackItem)) {
+            float stackNumber = Float.parseFloat(stackItem);
+            if(stackNumber > 0) {
+                dataStack.push(Float.toString((float) Math.sqrt(stackNumber)));
+            } else {
+                dataStack.push(stackItem);
+            }
+        } else {
+            dataStack.push(stackItem);
         }
     }
 
