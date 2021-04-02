@@ -7,7 +7,7 @@ import java.util.Stack;
 public class CalculatorProcessor {
 
     protected static int operationMode = 0;
-    protected static Stack<String> dataStack = new Stack<String>();
+    protected static Stack<String> dataStack = new Stack<>();
     protected static String commandStream = "";
     protected static String[] dataRegister = new String[26];
     protected static final float epsilon = 0.0001f;
@@ -30,7 +30,7 @@ public class CalculatorProcessor {
                 this.constructWholeNum(inputCharacter);
             } else if(operationMode < -1) {
                 this.constructDecimalNum(inputCharacter);
-            } else if(operationMode > 0) {
+            } else {
                 this.constructList(inputCharacter);
             }
         }
@@ -103,7 +103,6 @@ public class CalculatorProcessor {
                 dataStack.push(Float.toString(numOfItems));
                 break;
             default:
-                return;
         }
     }
 
@@ -267,7 +266,6 @@ public class CalculatorProcessor {
                 }
                 break;
             default:
-                return;
         }
     }
 
@@ -312,7 +310,6 @@ public class CalculatorProcessor {
                         dataStack.push(Float.toString(numA / numB));
                         break;
                     default:
-                        return;
                 }
             }
         }
@@ -327,16 +324,18 @@ public class CalculatorProcessor {
             float numB = Float.parseFloat(stackItemB);
             float numA = Float.parseFloat(stackItemA);
             boolean numBA, numBB;
-            if(numA <= epsilon && numA >= epsilon*-1) {
+            numBA = numA <= epsilon && numA >= epsilon * -1;
+            /*if(numA <= epsilon && numA >= epsilon*-1) {
                 numBA = true;
             } else {
                 numBA = false;
-            }
-            if(numB <= epsilon && numB >= epsilon*-1) {
+            }*/
+            numBB = numB <= epsilon && numB >= epsilon * -1;
+            /*if(numB <= epsilon && numB >= epsilon*-1) {
                 numBB = true;
             } else {
                 numBB = false;
-            }
+            }*/
             switch(inputCharacter) {
                 case '&':
                     if(numBA && numBB) {
@@ -353,7 +352,6 @@ public class CalculatorProcessor {
                     }
                     break;
                 default:
-                    return;
             }
         }
     }
