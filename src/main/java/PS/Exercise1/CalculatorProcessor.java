@@ -62,11 +62,9 @@ public class CalculatorProcessor {
                 this.constructList(inputCharacter);
             }
         }
-        //this.printToOutputStream("Stack: " + dataStack);
     }
 
     private void executeInputChar(char inputCharacter) {
-        //this.printToOutputStream("Input Character: " + inputCharacter + ", Stack: " + dataStack);
         switch(inputCharacter) {
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':
@@ -359,23 +357,13 @@ public class CalculatorProcessor {
             float numA = Float.parseFloat(stackItemA);
             boolean numBA, numBB;
             numBA = numA <= epsilon && numA >= epsilon * -1;
-            /*if(numA <= epsilon && numA >= epsilon*-1) {
-                numBA = true;
-            } else {
-                numBA = false;
-            }*/
             numBB = numB <= epsilon && numB >= epsilon * -1;
-            /*if(numB <= epsilon && numB >= epsilon*-1) {
-                numBB = true;
-            } else {
-                numBB = false;
-            }*/
             switch(inputCharacter) {
                 case '&':
-                    if(numBA && numBB) {
-                        dataStack.push("1.0");
-                    } else {
+                    if(numBA || numBB) {
                         dataStack.push("0.0");
+                    } else {
+                        dataStack.push("1.0");
                     }
                     break;
                 case '|':
@@ -538,15 +526,11 @@ public class CalculatorProcessor {
         try {
             int n = Integer.parseInt(input);
             dataStack.push((Float.toString((float) n)));
-            //this.printToOutputStream(input);
-            //this.printToOutputStream(commandStream);
             return;
         } catch(NumberFormatException ignored) {}
         try {
             Float.parseFloat(input);
             dataStack.push(input);
-            //this.printToOutputStream(input);
-            //this.printToOutputStream(commandStream);
             return;
         } catch(NumberFormatException ignored) {}
         if(input.startsWith("(") && input.endsWith(")") && StringUtils.countMatches(input, "(") == StringUtils.countMatches(input, ")")) {
