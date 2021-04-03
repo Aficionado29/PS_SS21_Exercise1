@@ -9,14 +9,16 @@ import org.springframework.context.event.EventListener;
 @SpringBootApplication
 public class CalculatorApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CalculatorApplication.class, args);
+	public static void main(String[] args) throws InvalidTopOfStack {
+		CalculatorProcessor calculator = new CalculatorProcessor(args);
+		calculator.run();
+		//SpringApplication.run(CalculatorApplication.class, args);
 	}
 
-	@EventListener(ApplicationReadyEvent.class)
+	/*@EventListener(ApplicationReadyEvent.class)
 	public void runCalculatorProcessing() throws InvalidTopOfStack  {
 		CalculatorProcessor calculator = new CalculatorProcessor();
 		calculator.run();
-	}
+	}*/
 
 }

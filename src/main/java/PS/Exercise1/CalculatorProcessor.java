@@ -2,6 +2,10 @@ package PS.Exercise1;
 
 import PS.Exercise1.Exceptions.InvalidTopOfStack;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Stack;
 
 public class CalculatorProcessor {
@@ -11,10 +15,16 @@ public class CalculatorProcessor {
     protected static String commandStream = "";
     protected static String[] dataRegister = new String[26];
     protected static final float epsilon = 0.0001f;
+    protected static OutputStream os = System.out;;
 
-    public CalculatorProcessor() {
-        dataStack.push("3.0");
-        dataRegister[0] = "(3!3!1-2!1=4!()(4!4$1+$@)@2$*)3!3$3!@2$";
+    public CalculatorProcessor(String[] args) {
+        try {
+            os = new FileOutputStream(args[0]);
+        } catch(FileNotFoundException e) {
+        } catch (ArrayIndexOutOfBoundsException e) {}
+        //dataStack.push("3.0");
+        //dataRegister[0] = "(3!3!1-2!1=4!()(4!4$1+$@)@2$*)3!3$3!@2$";
+        dataRegister[0] = "1 2 3 ~ \"";
         commandStream = dataRegister[0];
     }
 
@@ -23,7 +33,6 @@ public class CalculatorProcessor {
         while(commandStream.length() != 0) {
             inputCharacter = commandStream.charAt(0);
             commandStream = commandStream.substring(1);
-            System.out.println("InputCharacter: " + inputCharacter + ", Stack: " + dataStack);
             if(operationMode == 0) {
                 this.executeInputChar(inputCharacter);
             } else if(operationMode == -1) {
@@ -34,11 +43,11 @@ public class CalculatorProcessor {
                 this.constructList(inputCharacter);
             }
         }
-        System.out.println("Stack: " + dataStack);
+        this.printToOutputStream("Stack: " + dataStack);
     }
 
     private void executeInputChar(char inputCharacter) {
-        System.out.println("som v execute input character");
+        this.printToOutputStream("Input Character: " + inputCharacter + ", Stack: " + dataStack);
         switch(inputCharacter) {
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':
@@ -101,6 +110,8 @@ public class CalculatorProcessor {
             case '#':
                 float numOfItems = (float) dataStack.size();
                 dataStack.push(Float.toString(numOfItems));
+            case '"':
+                this.printToOutputStream(this.formatOutput(dataStack.pop()));
                 break;
             default:
         }
@@ -480,6 +491,23 @@ public class CalculatorProcessor {
             case 'y': case 'Y': return 24;
             case 'z': case 'Z': return 25;
             default: return -1;
+        }
+    }
+
+    private void printToOutputStream(String printText) {
+        try {
+            os.write(printText.getBytes());
+            os.write("\n".getBytes());
+        } catch(IOException e) {
+            System.err.println("An error occurred when printing to OutputStream!");
+        }
+    }
+
+    private String formatOutput(String stackItem) {
+        if(this.isList(stackItem)) {
+            return stackItem.substring(1, stackItem.length()-1);
+        } else {
+            return stackItem;
         }
     }
 
