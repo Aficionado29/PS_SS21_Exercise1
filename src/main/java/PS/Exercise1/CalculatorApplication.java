@@ -11,14 +11,7 @@ public class CalculatorApplication {
 
 	public static void main(String[] args) throws InvalidTopOfStack {
 		CalculatorProcessor calculator = new CalculatorProcessor(args);
-		calculator.run();
-		//SpringApplication.run(CalculatorApplication.class, args);
+		calculator.start();
 	}
-
-	/*@EventListener(ApplicationReadyEvent.class)
-	public void runCalculatorProcessing() throws InvalidTopOfStack  {
-		CalculatorProcessor calculator = new CalculatorProcessor();
-		calculator.run();
-	}*/
 
 }

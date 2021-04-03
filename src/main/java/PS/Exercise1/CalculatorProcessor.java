@@ -1,11 +1,14 @@
 package PS.Exercise1;
 
 import PS.Exercise1.Exceptions.InvalidTopOfStack;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.EmptyStackException;
+import java.util.Scanner;
 import java.util.Stack;
 
 public class CalculatorProcessor {
@@ -15,20 +18,36 @@ public class CalculatorProcessor {
     protected static String commandStream = "";
     protected static String[] dataRegister = new String[26];
     protected static final float epsilon = 0.0001f;
-    protected static OutputStream os = System.out;;
+    protected static OutputStream os = System.out;
+    protected static Scanner scanner = new Scanner(System.in);
 
     public CalculatorProcessor(String[] args) {
         try {
             os = new FileOutputStream(args[0]);
         } catch(FileNotFoundException e) {
-        } catch (ArrayIndexOutOfBoundsException e) {}
+            System.err.println("Could not create a specified output file");
+        } catch(IndexOutOfBoundsException ignored) {
+        }
         //dataStack.push("3.0");
         //dataRegister[0] = "(3!3!1-2!1=4!()(4!4$1+$@)@2$*)3!3$3!@2$";
-        dataRegister[0] = "1 2 3 ~ \"";
+        dataRegister[0] = "(Welcome, please insert first command/entry:) \" '";
         commandStream = dataRegister[0];
+        dataRegister[0] = "(Insert next command/entry:) \" '";
     }
 
-    public void run() throws InvalidTopOfStack {
+    public void start() throws InvalidTopOfStack {
+        while(true) {
+            try {
+                this.run();
+            } catch(EmptyStackException e) {
+                this.printToOutputStream("Data stack does not have enough entries for the operation you requested");
+            }
+            this.printToOutputStream("Stack: " + dataStack);
+            commandStream = dataRegister[0];
+        }
+    }
+
+    private void run() throws InvalidTopOfStack {
         char inputCharacter;
         while(commandStream.length() != 0) {
             inputCharacter = commandStream.charAt(0);
@@ -43,11 +62,11 @@ public class CalculatorProcessor {
                 this.constructList(inputCharacter);
             }
         }
-        this.printToOutputStream("Stack: " + dataStack);
+        //this.printToOutputStream("Stack: " + dataStack);
     }
 
     private void executeInputChar(char inputCharacter) {
-        this.printToOutputStream("Input Character: " + inputCharacter + ", Stack: " + dataStack);
+        //this.printToOutputStream("Input Character: " + inputCharacter + ", Stack: " + dataStack);
         switch(inputCharacter) {
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':
@@ -112,6 +131,10 @@ public class CalculatorProcessor {
                 dataStack.push(Float.toString(numOfItems));
             case '"':
                 this.printToOutputStream(this.formatOutput(dataStack.pop()));
+                break;
+            case '\'':
+                String input = scanner.nextLine();
+                this.processInput(input);
                 break;
             default:
         }
@@ -408,7 +431,7 @@ public class CalculatorProcessor {
         if(this.isDecimalNumber(stackItem)) {
             int roundedNum = Math.round(Float.parseFloat(stackItem));
             int stackSize = dataStack.size() + 1;
-            if(roundedNum <= stackSize) {
+            if(roundedNum <= stackSize && roundedNum != 1) {
                 String copiedItem = dataStack.get(stackSize - roundedNum);
                 dataStack.push(copiedItem);
             } else {
@@ -508,6 +531,30 @@ public class CalculatorProcessor {
             return stackItem.substring(1, stackItem.length()-1);
         } else {
             return stackItem;
+        }
+    }
+
+    private void processInput(String input) {
+        try {
+            int n = Integer.parseInt(input);
+            dataStack.push((Float.toString((float) n)));
+            //this.printToOutputStream(input);
+            //this.printToOutputStream(commandStream);
+            return;
+        } catch(NumberFormatException ignored) {}
+        try {
+            Float.parseFloat(input);
+            dataStack.push(input);
+            //this.printToOutputStream(input);
+            //this.printToOutputStream(commandStream);
+            return;
+        } catch(NumberFormatException ignored) {}
+        if(input.startsWith("(") && input.endsWith(")") && StringUtils.countMatches(input, "(") == StringUtils.countMatches(input, ")")) {
+            dataStack.push(input);
+        } else if("=<>?+-*/&|~%_!$@\\@\"".contains(input)) {
+            commandStream = input;
+        } else {
+            dataStack.push("()");
         }
     }
 
