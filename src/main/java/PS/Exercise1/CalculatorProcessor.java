@@ -28,9 +28,17 @@ public class CalculatorProcessor {
             System.err.println("Could not create a specified output file");
         } catch(IndexOutOfBoundsException ignored) {
         }
-        //dataStack.push("3.0");
-        //dataRegister[0] = "(3!3!1-2!1=4!()(4!4$1+$@)@2$*)3!3$3!@2$";
-        dataRegister[0] = "(Welcome, please insert first command/entry:) \" '";
+        dataRegister[0] = "(Welcome, the program to calculate the surface area of a regular triangle given in 3D space by points A = (0,-0.47,3.86), B = (0,2,0) and C = (1,4,4) is stored in register X, \nthe program to compute n (5) of these triangles is stored in register Y and the program to calculate the octahedron surface is in register Z. \nTo run the programs load them from the appropriate register and write @ on the command stream to start the execution. \nPlease insert first command/entry:) \" '";
+
+        // program to calculate surface area of regular triangle in 3D space, stored into register X
+        dataRegister[23] = "(0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + _ 0 1 - 0 1 - * 0.47 ~ 4 - 0.47 ~ 4 - * + 3.86 4 - 3.86 4 - * + _ 0 0 - 0 0 - * 0.47 ~ 2 - 0.47 ~ 2 - * + 3.86 0 - 3.86 0 - * + _ + + 2 / 0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + _ 0 1 - 0 1 - * 0.47 ~ 4 - 0.47 ~ 4 - * + 3.86 4 - 3.86 4 - * + _ 0 0 - 0 0 - * 0.47 ~ 2 - 0.47 ~ 2 - * + 3.86 0 - 3.86 0 - * + _ + + 2 / 0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + _ - 0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + _ 0 1 - 0 1 - * 0.47 ~ 4 - 0.47 ~ 4 - * + 3.86 4 - 3.86 4 - * + _ 0 0 - 0 0 - * 0.47 ~ 2 - 0.47 ~ 2 - * + 3.86 0 - 3.86 0 - * + _ + + 2 / 0 1 - 0 1 - * 0.47 ~ 4 - 0.47 ~ 4 - * + 3.86 4 - 3.86 4 - * + _ - 0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + _ 0 1 - 0 1 - * 0.47 ~ 4 - 0.47 ~ 4 - * + 3.86 4 - 3.86 4 - * + _ 0 0 - 0 0 - * 0.47 ~ 2 - 0.47 ~ 2 - * + 3.86 0 - 3.86 0 - * + _ + + 2 / 0 0 - 0 0 - * 0.47 ~ 2 - 0.47 ~ 2 - * + 3.86 0 - 3.86 0 - * + _ - * * * _)";
+
+        // program to calculate surface area of n (in this case 5) regular triangles in 3D space, stored into register Y
+        dataRegister[24] = "(x @ 5 *)";
+
+        // program to calculate surface area of octahedron using two different formulas, stored into register Z
+        dataRegister[25] = "((x @ 8 *) @ (2 3 _ 0 1 - 0 1 - * 2 4 - 2 4 - * + 0 4 - 0 4 - * + * *) @)";
+
         commandStream = dataRegister[0];
         dataRegister[0] = "(Insert next command/entry:) \" '";
     }
@@ -535,7 +543,7 @@ public class CalculatorProcessor {
         } catch(NumberFormatException ignored) {}
         if(input.startsWith("(") && input.endsWith(")") && StringUtils.countMatches(input, "(") == StringUtils.countMatches(input, ")")) {
             dataStack.push(input);
-        } else if("=<>?+-*/&|~%_!$@\\@\"".contains(input)) {
+        } else if("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ=<>?+-*/&|~%_!$@\\@\"".contains(input)) {
             commandStream = input;
         } else {
             dataStack.push("()");
